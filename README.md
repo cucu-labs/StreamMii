@@ -27,7 +27,7 @@ A simple tool that converts media into Wii compatible formats for smooth playbac
 - K-Drama  
 - Anime  
 - Sports  
-- More coming soon
+### More coming soon!
 
 ## System Requirements
 
