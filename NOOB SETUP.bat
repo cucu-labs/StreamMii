@@ -1,9 +1,7 @@
 @echo off
 setlocal
 
-:: =========================
-:: AUToELEVATE TO ADMIN
-:: =========================
+:: AUTOELEVATE TO ADMIN
 net session >nul 2>&1
 if %errorlevel% neq 0 (
     echo [!] Requesting administrative privileges...
