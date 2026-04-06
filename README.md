@@ -36,8 +36,8 @@ A simple tool that converts media into Wii compatible formats for smooth playbac
 
 * Movies
 * TV Shows
-* Adult Content
-* Audio Content
+* Adult Content > Solo, Group, JAV
+* Audio
 * Documentaries
 * K-Drama
 * Anime
