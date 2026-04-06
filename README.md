@@ -28,7 +28,7 @@ A simple tool that converts media into Wii compatible formats for smooth playbac
 | **Resolution** | 640x360 |
 | **Scaling** | Lanczos resampling |
 | **Bitrate** | 1000 kbps |
-| **FPS** | 30 or lower |
+| **FPS** | Usually matches source media |
 
 ---
 
