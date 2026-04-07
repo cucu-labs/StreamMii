@@ -36,12 +36,29 @@ A simple tool that converts media into Wii compatible formats for smooth playbac
 
 * Movies
 * TV Shows
-* Adult Content > Solo, Group, JAV
+* <details>
+  <summary>Adult Content </summary>
+
+  Solo, Group, JAV
+
+  </details>
 * Audio
 * Documentaries
 * K-Drama
 * Anime
-* Sports
+* <details>
+  <summary>Sports </summary>
+
+  Team Sports > Football, Basketball, Volleyball, Rugby, Baseball, Softball, Handball  
+  Combat Sports > Boxing, MMA, Wrestling, Karate  
+  Winter Sports > Skiing, Snowboarding, Ice Skating, Bobsledding  
+  Water Sports > Surfing, Rowing, Kayaking, Synchronized Swimming  
+  Motor Sports > F1, MotoGP  
+  Individual Sports > Athletics (Track and Field), Tennis, Golf, Pool, Swimming, Badminton, Table Tennis, Cycling, Gymnastics  
+  Equestrian > Show Jumping, Dressage  
+  Other > Cricket, Hockey
+
+  </details>
 
 > **More coming soon!**
 
@@ -55,8 +72,3 @@ A simple tool that converts media into Wii compatible formats for smooth playbac
 
 ```bash
 pip install guessit requests colorama
-```
-Or install everything (including Python, ffmpeg and pip packages) by running:
-```bash
-NOOB SETUP.bat
-```
