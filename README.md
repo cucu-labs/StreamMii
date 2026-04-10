@@ -84,7 +84,7 @@ Or if you are feeling freaky you can use the batch file.
 ```
 ### MacOS with Apple Silicon Processor:
 ```
-You are on your own but I will give you the sources you need.
+You are on your own but we will give you the sources you need.
 There are multiple sources of ffmpeg for Apple Silicon, and each have their ups and downs,
 it's up to you to use the best one for you.
 1. https://github.com/Vargol/ffmpeg-apple-arm64-build?tab=readme-ov-file
@@ -96,6 +96,6 @@ https://www.python.org/downloads/release/python-3144/
 
 ### MacOS with Intel Processor:
 ```
-You are on your own but I will give you the sources you need.
+You are on your own but we will give you the sources you need.
 ffmpeg: https://evermeet.cx/ffmpeg/ffmpeg-123838-gb462674645.7z
 python: https://www.python.org/downloads/release/python-3144/
