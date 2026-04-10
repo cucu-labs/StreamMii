@@ -69,7 +69,6 @@ A simple tool that converts media into Wii compatible formats for smooth playbac
 
 ```bash
 pip install guessit requests colorama
-
 ```
 ### How to use the noob installer for Linux:
 Works and tested on Debian/Ubuntu/Mint, Fedora/RHEL/CentOS, Arch/Manjaro, openSUSE, Alpine.
