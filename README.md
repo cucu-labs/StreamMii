@@ -10,7 +10,7 @@ A simple tool that converts media into Wii compatible formats for smooth playbac
 
 ---
 
-## 🚀 Features
+## 🚀 Features:
 
 * **GPU Acceleration Support:**
     * **AMD**
@@ -20,7 +20,7 @@ A simple tool that converts media into Wii compatible formats for smooth playbac
 * **Automatic media metadata handling**
 ---
 
-## 🛠️ Output Settings
+## 🛠️ Output Settings:
 
 | Parameter | Configuration |
 | :--- | :--- |
@@ -31,7 +31,7 @@ A simple tool that converts media into Wii compatible formats for smooth playbac
 
 ---
 
-## 📁 Supported Media Types
+## 📁 Supported Media Types:
 
 * Movies
 * TV Shows
@@ -61,28 +61,28 @@ A simple tool that converts media into Wii compatible formats for smooth playbac
 
 ---
 
-## 💻 System Requirements
+## 💻 System Requirements:
 
 * `ffmpeg` must be installed and available in your system `PATH`.
 
-### Installing packages
+### Installing packages:
 
 ```bash
 pip install guessit requests colorama
 
 ```
-### How to use the noob installer for Linux.
-Works on Debian/Ubuntu/Mint, Fedora/RHEL/CentOS, Arch/Manjaro, openSUSE, Alpine.
+### How to use the noob installer for Linux:
+Works and tested on Debian/Ubuntu/Mint, Fedora/RHEL/CentOS, Arch/Manjaro, openSUSE, Alpine.
 ```
 sudo chmod +x noob-install-by-motanu.sh
 ./noob-install-by-motanu.sh
 ```
-### Windows
+### Windows:
 ```
-Just run the executable either from release either from the repository
-Or if you're feeling freaky you can use the batch file.
+Just run the executable either from release either from the repository.
+Or if you are feeling freaky you can use the batch file.
 ```
-### MacOS with Apple Silicon Processor
+### MacOS with Apple Silicon Processor:
 ```
 You are on your own but I will give you the sources you need.
 There are multiple sources of ffmpeg for Apple Silicon, and each have their ups and downs,
@@ -94,7 +94,7 @@ Now you will need Python:
 https://www.python.org/downloads/release/python-3144/
 ```
 
-### MacOS with Intel Processor
+### MacOS with Intel Processor:
 ```
 You are on your own but I will give you the sources you need.
 ffmpeg: https://evermeet.cx/ffmpeg/ffmpeg-123838-gb462674645.7z
