@@ -64,6 +64,7 @@ A simple tool that converts media into Wii compatible formats for smooth playbac
 ## 💻 System Requirements:
 
 * `ffmpeg` must be installed and available in your system `PATH`.
+* `python` must be installed and available in your system `PATH`.
 
 ### Installing packages:
 
