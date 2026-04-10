@@ -76,6 +76,7 @@ Works and tested on Debian/Ubuntu/Mint, Fedora/RHEL/CentOS, Arch/Manjaro, openSU
 ```
 sudo chmod +x noob-install-by-motanu.sh
 ./noob-install-by-motanu.sh
+
 Soon: Linux ARM installer | But we will not help you with any issues that you will encounter.
 ```
 ### Windows:
