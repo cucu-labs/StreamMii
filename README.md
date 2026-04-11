@@ -22,12 +22,12 @@ A simple tool that converts media into Wii compatible formats for smooth playbac
 
 ## 🛠️ Output Settings:
 
-| Parameter | Configuration |
+| Parameter: | Configuration: |
 | :--- | :--- |
-| **Resolution** | 640x360 or 640x480 depending on aspect ratio. |
-| **Scaling** | Lanczos resampling. |
-| **Bitrate** | 1000 kbps. |
-| **FPS** | **Usually** matches source media. |
+| **Resolution:** | 640x360 or 640x480 depending on aspect ratio. |
+| **Scaling:** | Lanczos resampling. |
+| **Bitrate:** | 1000 kbps. |
+| **FPS:** | **Usually** matches source media. |
 
 ---
 
