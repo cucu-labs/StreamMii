@@ -83,7 +83,7 @@ sudo chmod +x noob-install-by-motanu.sh
 ./noob-install-by-motanu.sh
 
 FOR ARM USERS!!!
-ARM (AARCH64) should work fine on these:
+AARCH64 should work fine on these:
 - Ubuntu (22.04 & 24.04)
 - Linux Mint (21 & 22 & 22.3)
 - Debian (11 & 12)
