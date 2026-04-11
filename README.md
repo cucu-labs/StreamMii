@@ -17,7 +17,7 @@ A simple tool that converts media into Wii compatible formats for smooth playbac
     * **NVIDIA** (NVENC).
     * **Intel** (QSV).
     * **CPU fallback** (not recommended due to lower quality & performance).
-* **Automatic media metadata handling**
+* **Automatic media metadata handling.**
 ---
 
 ## 🛠️ Output Settings:
