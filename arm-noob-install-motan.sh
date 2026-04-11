@@ -28,7 +28,7 @@ if [[ "$ARCH" == armv6* ]]; then
     echo
 fi
 
-#  detecting pgk mngDETECT PACKAGE MANAGER
+#  detecting pgk mng
 detect_pkg_manager() {
     if   command -v apt-get &>/dev/null; then echo "apt"
     elif command -v dnf     &>/dev/null; then echo "dnf"
