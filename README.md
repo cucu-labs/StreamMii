@@ -83,6 +83,7 @@ sudo chmod +x noob-install-by-motanu.sh
 ./noob-install-by-motanu.sh
 
 FOR ARM USERS!!!
+
 AARCH64 should work fine on these:
 - Ubuntu (22.04 & 24.04)
 - Linux Mint (21 & 22 & 22.3)
@@ -105,6 +106,7 @@ Partially working / limited:
 - Ubuntu 20.04 (python3-venv may need manual install)
 
 !!!! NOT COMPATIBLE WITH Gentoo, NixOS, Void Linux, Slackware, Android (Termux) !!!!
+!!!! We will not provide support for issues you will encounter on aarch64 & armv6 & armv7 !!!!
 
 ```
 ### Windows:
