@@ -108,7 +108,7 @@ ARMV6 & ARMV7 should work fine on these:
 
 ❗ Partially working / limited: ❗
 - Fedora on armv7 (Fedora dropped 32-bit arm since F37).
-- Alpine on armv6 (FFmpeg may be missing from repo, build from source).
+- Alpine on armv6 (build FFmpeg from source).
 - RHEL /CentOS (FFmpeg not in base repos, needs EPEL + RPM Fusion added manually).
 - Ubuntu 20.04 (python3-venv may need manual install).
 
