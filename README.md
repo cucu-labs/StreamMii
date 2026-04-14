@@ -75,12 +75,12 @@
 * `ffmpeg` must be installed and available in your system `PATH`.
 * `python` must be installed and available in your system `PATH`.
 
-### Installing packages:
+### 🔨 Installing packages:
 
 ```bash
 pip install guessit requests colorama
 ```
-### How to use the noob installer for Linux:
+### 🔨 How to use the noob installer for Linux:
 ```
 sudo chmod +x noob-install-by-motanu.sh
 ./noob-install-by-motanu.sh
@@ -116,14 +116,14 @@ Partially working / limited:
 !!!! We will not provide support for issues you will encounter on aarch64 & armv6 & armv7 !!!!
 
 ```
-### Windows:
+### 🔨 Windows:
 ```
 Just run the executable either from release either from the repository.
 Or if you are feeling freaky you can use the batch file.
 
 Soon: Windows ARM installer | But we will not help you with any issues that you will encounter.
 ```
-### MacOS with Apple Silicon SoC:
+### 🔨 MacOS with Apple Silicon SoC:
 ```
 You are on your own but we will give you the sources you need.
 We can not help you with any issues that you will encounter. 
@@ -139,7 +139,7 @@ Note: We do not know how any of this will work with the new MacBook Neo, because
 slighty diffrent from their M SoC series, and we do not own one so we can not test it.
 ```
 
-### MacOS with Intel CPU:
+### 🔨 MacOS with Intel CPU:
 ```
 You are on your own but we will give you the sources you need.
 We can not help you with any issues that you will encounter.
