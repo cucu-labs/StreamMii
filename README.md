@@ -4,7 +4,13 @@
   </a>
 </p>
 
-# StreamMii
+---
+
+____  _                                  __  __  _  _ 
+ / ___|| |_  _ __   ___   __ _  _ __ ___  |  \/  |(_)(_)
+ \___ \| __|| '__| / _ \ / _` || '_ ` _ \ | |\/| || || |
+  ___) || |_ | |   |  __/| (_| || | | | | || |  | || || |
+ |____/  \__||_|    \___| \__,_||_| |_| |_||_|  |_||_||_|
 
 A simple tool that converts media into Wii compatible formats for smooth playback.
 
@@ -82,8 +88,6 @@ Or if you use arm...
 sudo chmod +x arm-noob-install-motan.sh
 ./arm-noob-install-motan.sh
 
-FOR ARM USERS!!!
-
 AARCH64 should work fine on these:
 - Ubuntu (22.04 & 24.04).
 - Linux Mint (21 & 22 & 22.3).
@@ -121,8 +125,7 @@ Soon: Windows ARM installer | But we will not help you with any issues that you 
 You are on your own but we will give you the sources you need.
 We can not help you with any issues that you will encounter. 
 
-There are multiple sources of ffmpeg for Apple Silicon, and each have their ups and downs,
-it's up to you to use the best one for you.
+There are multiple sources of ffmpeg for Apple Silicon, and each have their ups and downs,it's up to you to use the best one for you.
 1. https://github.com/Vargol/ffmpeg-apple-arm64-build?tab=readme-ov-file
 2. https://gitlab.com/martinr92/ffmpeg
 3. https://osxexperts.net/
