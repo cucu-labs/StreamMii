@@ -15,7 +15,7 @@
 ## 🚀 Features:
 
 * **GPU Acceleration Support:**
-    * **AMD**
+    * **AMD.**
     * **NVIDIA** (NVENC).
     * **Intel** (QSV).
     * **CPU fallback** (not recommended due to lower quality & performance).
@@ -38,9 +38,9 @@
 * Movies
 * TV Shows
 * <details>
-  <summary>Adult Content </summary>
+  <summary>Adult Content: </summary>
 
-  Solo, Group, JAV
+  Solo, Group, JAV.
 
   </details>
 * Audio
@@ -48,16 +48,16 @@
 * K-Drama
 * Anime
 * <details>
-  <summary>Sports </summary>
+  <summary>Sports: </summary>
 
-  Team Sports > Football, Basketball, Volleyball, Rugby, Baseball, Softball, Handball  
-  Combat Sports > Boxing, MMA, Wrestling, Karate  
-  Winter Sports > Skiing, Snowboarding, Ice Skating, Bobsledding  
-  Water Sports > Surfing, Rowing, Kayaking, Synchronized Swimming  
-  Motor Sports > F1, MotoGP  
+  Team Sports > Football, Basketball, Volleyball, Rugby, Baseball, Softball, Handball.
+  Combat Sports > Boxing, MMA, Wrestling, Karate.
+  Winter Sports > Skiing, Snowboarding, Ice Skating, Bobsledding.  
+  Water Sports > Surfing, Rowing, Kayaking, Synchronized Swimming.  
+  Motor Sports > F1, MotoGP.  
   Individual Sports > Athletics (Track and Field), Tennis, Golf, Pool, Swimming, Badminton, Table Tennis, Cycling, Gymnastics  
-  Equestrian > Show Jumping, Dressage  
-  Other > Cricket, Hockey
+  Equestrian > Show Jumping, Dressage.  
+  Other > Cricket, Hockey.
 
   </details>
 
