@@ -4,7 +4,7 @@
 
 ---
 
-### 🤘 How to use:
+### How to use:
 ```
 Put StreamMii in / next to your media, run it, pick a category, confirm. Done.
 
@@ -25,7 +25,7 @@ so re runs are way faster. Set "skip_compliant": false in ~/streammii/config.jso
 to force a full re encode pass. Output audio is downmixed to AAC stereo.
 ```
 
-## 🚀 Features:
+## Features:
 
 * **GPU Acceleration Support:**
     * **AMD.**
@@ -34,7 +34,7 @@ to force a full re encode pass. Output audio is downmixed to AAC stereo.
     * **CPU fallback** (not recommended due to lower quality & performance).
 * **Automatic media metadata handling.**
 
-### 🛠️ Now you can use flags:
+### Now you can use flags:
 ```
 --path DIR         scan DIR instead of the script's folder
 --dry-run          plan only, change nothing
@@ -45,7 +45,7 @@ to force a full re encode pass. Output audio is downmixed to AAC stereo.
 
 ---
 
-## 🛠️ Output Settings:
+## Output Settings:
 
 | Parameters: | Configurations: |
 | :--- | :--- |
@@ -56,7 +56,7 @@ to force a full re encode pass. Output audio is downmixed to AAC stereo.
 
 ---
 
-## 📁 Supported Media Types:
+## Supported Media Types:
 
 * Movies.
 * TV Shows.
@@ -93,12 +93,12 @@ to force a full re encode pass. Output audio is downmixed to AAC stereo.
 
 ---
 
-## 💻 System Requirements:
+## System Requirements:
 
 * `ffmpeg` must be installed and available in your system `PATH`.
 * `python` must be installed and available in your system `PATH`.
 
-### 🔨 Installing packages:
+### Installing packages:
 
 ```bash
 # pinned + hash verified install: (recommended)
@@ -106,7 +106,7 @@ pip install --require-hashes -r requirements.txt
 # Old method: (not recommended)
 pip install guessit requests colorama
 ```
-### 🔨 How to use the noob installer for Linux:
+### How to use the noob installer for Linux:
 ```
 sudo chmod +x noob-install-by-motanu.sh
 ./noob-install-by-motanu.sh
@@ -161,7 +161,7 @@ Or if you use arm...
 ffmpeg: https://github.com/tordona/ffmpeg-win-arm64
 python: https://www.python.org/downloads/release/python-31313/
 ```
-### 🔨 MacOS with Apple Silicon SoC:
+### MacOS with Apple Silicon SoC:
 ```
 ❗ You are on your own but we will give you the sources you need. ❗
 ❌ We can not help you with any issues that you will encounter. ❌
@@ -177,7 +177,7 @@ https://www.python.org/downloads/release/python-3144/
 ❗❗❗❗ Note: We do not know how any of this will work with the new MacBook Neo, because it is slighty diffrent from their M SoC series, and we do not own one so we can not test ❗❗❗❗
 ```
 
-### 🔨 MacOS with Intel CPU:
+### MacOS with Intel CPU:
 ```
 ❗ You are on your own but we will give you the sources you need. ❗
 ❌ We can not help you with any issues that you will encounter. ❌
@@ -187,7 +187,7 @@ python: https://www.python.org/downloads/release/python-3144/
 
 ❗❗❗❗ Note: Hackintosh not tested yet. ❗❗❗❗
 ```
-### 🤘 Why StreamMii-Monolithic?
+### Why StreamMii-Monolithic?
 ```
 The same StreamMii but now it is monolithic. What does that mean? Instead of downloading 6 files you download 1 file, which is easier to manage. INSTALLER IS NOT INCLUDED IN IT!
 To get it started now you need to download the monolithic StreamMii and your respective OS n00b installer, run the installler and then StreamMii-Monolithic.
