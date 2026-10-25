@@ -12,7 +12,7 @@ import tempfile
 import uuid
 
 from config import ADULT_MODES, AUDIO_EXTS, CATEGORIES, VERSION, Settings, load_config
-from ffmpeg_utils import ConversionError, Converter, encoder_names, probe, require_tools
+from ffmpeg_utils import ConversionError, Converter, encoder_names, preservation_warnings, probe, require_tools
 from logging_utils import Journal, LibraryLock, artifact_matches, artifact_record, fingerprint, job_key, unchanged
 from organizer import (OrganizeOptions, available_destination, discover, find_sidecars,
                        is_within, plan_destination, subtitle_target)
@@ -46,6 +46,7 @@ def parser():
     run.add_argument("--dry-run", action="store_true", help="Show destinations without writing anything")
     run.add_argument("--organize-only", action="store_true", help="Copy files into the library without re-encoding")
     run.add_argument("--delete-originals", action="store_true", help="Delete each unchanged media source only after verified publication and durable journal commit; subtitles are kept")
+    run.add_argument("--allow-lossy-deletion", action="store_true", help="With --delete-originals, accept losing embedded subtitle formatting, unsupported subtitles, or attachments")
     run.add_argument("--force", action="store_true", help="Process again, creating a new numbered copy")
     run.add_argument("--no-recursive", action="store_true")
     run.add_argument("--state-dir", type=Path, help="Journal/log directory (default OUTPUT/.streammii)")
@@ -84,10 +85,8 @@ def publish(source, destination, library):
         raise
     except OSError:
         if os.name == "nt":
-            # Windows rename refuses existing names and works on FAT32 as well.
             os.rename(source, destination)
             return
-        # Filesystems without hard links: exclusive creation still forbids overwrite.
         created = False
         try:
             with destination.open("xb") as target:
@@ -102,7 +101,6 @@ def publish(source, destination, library):
             raise
     source.unlink()
     if os.name != "nt":
-        # Persist new directory entries before a caller may delete the source.
         directory = destination.parent
         while directory.is_relative_to(Path(library)):
             descriptor = os.open(directory, os.O_RDONLY | os.O_DIRECTORY)
@@ -127,6 +125,56 @@ def copy_to_stage(source, destination):
         os.fsync(target.fileno())
 
 
+def check_deletion_preservation(info, settings, args, audio):
+    if args.organize_only or not args.delete_originals:
+        return
+    losses = preservation_warnings(info, settings, audio)
+    if losses and not getattr(args, "allow_lossy_deletion", False):
+        raise ConversionError("Original cannot be deleted: " + "; ".join(losses) +
+                              ". Keep originals, or explicitly accept these losses with --allow-lossy-deletion")
+
+
+def recover_pending(journal, key, library):
+    """Remove only unchanged artifacts owned by an incomplete publication."""
+    entry = journal.lookup(key)
+    if not entry or entry[0] != "pending":
+        return
+    artifacts = entry[1].get("artifacts", [])
+    existing = []
+    for record in artifacts:
+        path = Path(record["path"])
+        assert_destination_safe(path, library)
+        if os.path.lexists(path):
+            if not artifact_matches(record):
+                raise OSError(f"Interrupted job output has changed; refusing to remove it: {path}")
+            existing.append((path, record))
+    for path, record in existing:
+        if not artifact_matches(record):
+            raise OSError(f"Interrupted job output changed during recovery: {path}")
+        path.unlink()
+    journal.put(key, "retry", entry[1])
+
+
+def delete_verified_original(source, snapshot, result, journal, key):
+    def warning(message):
+        result.setdefault("warnings", []).append(message)
+        print(f"  Warning: {message}", file=sys.stderr)
+
+    result["original_deleted"] = False
+    if unchanged(snapshot) and all(artifact_matches(a) for a in result["artifacts"]):
+        try:
+            source.unlink()
+            result["original_deleted"] = True
+        except OSError as error:
+            warning(f"Library copy is complete, but the original could not be deleted: {error}")
+    else:
+        warning("Source or output changed before deletion; original kept")
+    try:
+        journal.put(key, "complete", result)
+    except sqlite3.Error:
+        warning("Could not update the deletion annotation in the journal")
+
+
 def process_one(source, library, options, settings, args, journal, converter, state):
     audio = options.category == "audio" or (options.category == "auto" and source.suffix.lower() in AUDIO_EXTS)
     snapshot = fingerprint(source)
@@ -139,8 +187,13 @@ def process_one(source, library, options, settings, args, journal, converter, st
     if not args.force:
         completed = journal.completed(key)
         if completed:
-            return {"source": str(source), "status": "skipped", "destination": completed["destination"],
+            if args.delete_originals:
+                if not args.organize_only:
+                    check_deletion_preservation(probe(source, settings.ffprobe), settings, args, audio)
+                delete_verified_original(source, snapshot, completed, journal, key)
+            return {**completed, "source": str(source), "status": "skipped", "destination": completed["destination"],
                     "reason": "Source, settings and verified library files match the journal"}
+        recover_pending(journal, key, library)
     info = probe(source, settings.ffprobe)
     desired = plan_destination(source, library, options, info.tags, not args.organize_only,
                                settings.online_metadata, settings.omdb_api_key)
@@ -154,10 +207,7 @@ def process_one(source, library, options, settings, args, journal, converter, st
 
     if info.duration <= 0 and not args.organize_only:
         raise ConversionError("Input duration is unknown; cannot safely verify a complete conversion")
-    if args.delete_originals and not args.organize_only and not audio and settings.subtitles == "keep":
-        from ffmpeg_utils import TEXT_SUB_CODECS, BITMAP_SUB_CODECS
-        if any(s.get("codec_name") not in TEXT_SUB_CODECS | BITMAP_SUB_CODECS for s in info.subtitles):
-            raise ConversionError("Original cannot be deleted while unsupported embedded subtitles would be lost; keep originals or explicitly use --subtitles none")
+    check_deletion_preservation(info, settings, args, audio)
     stage_root = library / ".streammii-staging"
     assert_destination_safe(stage_root, library)
     stage_root.mkdir(exist_ok=True)
@@ -207,18 +257,7 @@ def process_one(source, library, options, settings, args, journal, converter, st
                     final.unlink(missing_ok=True)
             raise
     if args.delete_originals:
-        if unchanged(snapshot) and all(artifact_matches(a) for a in result["artifacts"]):
-            try:
-                source.unlink()
-                result["original_deleted"] = True
-            except OSError as error:
-                warning(f"Library copy is complete, but the original could not be deleted: {error}")
-        else:
-            warning("Source or output changed before deletion; original kept")
-        try:
-            journal.put(key, "complete", result)
-        except sqlite3.Error:
-            warning("Could not update the deletion annotation in the journal")
+        delete_verified_original(source, snapshot, result, journal, key)
     return result
 
 

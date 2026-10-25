@@ -14,7 +14,7 @@ except ImportError:
     guessit_parse = None
 
 RESERVED = re.compile(r"^(CON|PRN|AUX|NUL|COM[1-9¹²³]|LPT[1-9¹²³])(?:\.|$)", re.I)
-EPISODE = re.compile(r"(?i)(?<![a-z0-9])(?:s(?P<s>\d{1,2})[ ._-]*e(?P<e>\d{1,3})(?P<more>(?:[ ._-]*e\d{1,3})*)|(?P<xs>\d{1,2})x(?P<xe>\d{1,3})|(?:episode|ep)[ ._-]*(?P<ep>\d{1,3}))(?!\d)")
+EPISODE = re.compile(r"(?i)(?<![a-z0-9])(?:s(?P<s>\d{1,2})[ ._-]*e(?P<e>\d{1,3})|(?P<xs>\d{1,2})x(?P<xe>\d{1,3})|(?:episode|ep)[ ._-]*(?P<ep>\d{1,3}))(?P<more>(?:[ ._]*e\d{1,3}|[ ._]*-[ ._]*(?:e)?\d{1,3})*)(?!\d)")
 YEAR = re.compile(r"(?<!\d)((?:19|20)\d{2})(?!\d)")
 RELEASE = re.compile(r"(?i)\b(?:2160p|1080[pi]|720p|480p|360p|bluray|blu.ray|brrip|bdrip|webrip|web[ .-]?dl|hdtv|dvdrip|x26[45]|h[ .]?26[45]|hevc|av1|aac|dts|proper|repack)\b")
 
@@ -37,6 +37,17 @@ def safe_name(name, fallback="Unknown", limit=90):
 def initial(name):
     first = name[0].upper()
     return first if first.isalpha() and len(first) == 1 else "#"
+
+
+def name_with_suffix(title, suffix, limit=130):
+    if len(suffix) >= limit or len(suffix.encode("utf-8")) >= 180:
+        raise ValueError("Episode identifier is too long for a safe filename")
+    title = safe_name(title)[:limit - len(suffix)]
+    while len((title + suffix).encode("utf-8")) > 180:
+        title = title[:-1]
+    if not title.rstrip(" ."):
+        raise ValueError("Episode identifier leaves no room for a title")
+    return title.rstrip(" .") + suffix
 
 
 def clean_title(text):
@@ -78,7 +89,14 @@ def parse_name(path, category="auto", title=None, year=None, season=None):
     if match:
         parsed_season = int(match["s"] or match["xs"] or 1)
         episodes = (int(match["e"] or match["xe"] or match["ep"]),)
-        episodes += tuple(int(e) for e in re.findall(r"(?i)e(\d+)", match["more"] or ""))
+        for extra in re.finditer(r"(?i)(?P<range>-)?[ ._]*e?(\d+)", match["more"] or ""):
+            end = int(extra[2])
+            if extra["range"]:
+                if end < episodes[-1]:
+                    raise ValueError("Episode range must be in ascending order")
+                episodes += tuple(range(episodes[-1] + 1, end + 1))
+            else:
+                episodes += (end,)
         raw_title = stem[:match.start()]
     else:
         # Common fansub naming: [Group] Series - 012 [quality].
@@ -88,7 +106,10 @@ def parse_name(path, category="auto", title=None, year=None, season=None):
             raw_title = stem[:anime.start()]
         else:
             raw_title = stem
-    y = YEAR.search(raw_title)
+    # A leading year-like number can be the title (1923, 2012, 2001...).
+    # Only treat a year as a release year when a title precedes it.
+    y = next((m for m in YEAR.finditer(raw_title)
+              if clean_title(raw_title[:m.start()]) != "Unknown"), None)
     parsed_year = int(y[1]) if y else None
     if y:
         raw_title = raw_title[:y.start()]

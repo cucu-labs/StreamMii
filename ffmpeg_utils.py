@@ -268,6 +268,22 @@ def decode_check(path, settings, log_path):
                log_path, timeout=settings.timeout)
 
 
+def preservation_warnings(info, settings, audio=False):
+    warnings = []
+    if any(s.get("codec_type") == "attachment" for s in info.streams):
+        warnings.append("Embedded attachments are omitted from the converted copy")
+    if not audio and settings.subtitles == "keep":
+        styled = sorted({s.get("codec_name") for s in info.subtitles
+                         if s.get("codec_name") in TEXT_SUB_CODECS - {"subrip"}})
+        if styled:
+            warnings.append("Embedded subtitles converted to SRT may lose formatting or positioning: " + ", ".join(styled))
+        skipped = sorted({s.get("codec_name") or "unknown" for s in info.subtitles
+                          if s.get("codec_name") not in TEXT_SUB_CODECS | BITMAP_SUB_CODECS})
+        if skipped:
+            warnings.append("Unsupported embedded subtitles omitted: " + ", ".join(skipped))
+    return warnings
+
+
 class Converter:
     def __init__(self, settings, log_dir):
         self.settings = settings
@@ -297,8 +313,9 @@ class Converter:
             if expected not in candidates and warning:
                 warning(f"{expected} unavailable; using CPU")
         skipped = [s for s in info.subtitles if s.get("codec_name") not in TEXT_SUB_CODECS | BITMAP_SUB_CODECS]
-        if skipped and self.settings.subtitles == "keep" and warning:
-            warning("Unsupported embedded subtitles omitted: " + ", ".join(s.get("codec_name", "unknown") for s in skipped))
+        if warning:
+            for message in preservation_warnings(info, self.settings, audio):
+                warning(message)
         for encoder in candidates:
             log = self.log_dir / f"{Path(destination).stem}-{encoder}.log"
             command = build_audio_command(source, destination, info, self.settings) if audio else build_video_command(source, destination, info, self.settings, encoder, sidecars)

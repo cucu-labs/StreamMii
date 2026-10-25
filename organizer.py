@@ -4,7 +4,7 @@ import os
 import re
 
 from config import ADULT_MODES, AUDIO_EXTS, CATEGORIES, SUB_EXTS, VIDEO_EXTS
-from metadata_utils import MediaName, fetch_metadata, initial, parse_name, safe_name
+from metadata_utils import MediaName, fetch_metadata, initial, name_with_suffix, parse_name, safe_name
 
 SPORTS = {
     "Team Sports": ("Football", "Basketball", "Volleyball", "Rugby", "Baseball", "Softball", "Handball"),
@@ -136,7 +136,7 @@ def plan_destination(source, library, options=None, tags=None, convert=True, onl
         folder = {"tv": "TV Shows", "anime": "Anime", "k-drama": "K-Drama"}[category]
         season = info.season if info.season is not None else 1
         parts = (folder, initial(title), title, f"Season {season:02d}")
-        filename = f"{title} - {info.episode_code}" if info.episode_code else safe_name(source.stem)
+        filename = name_with_suffix(title, f" - {info.episode_code}") if info.episode_code else safe_name(source.stem)
     elif category == "audio":
         artist = safe_name(tags.get("album_artist") or tags.get("albumartist") or tags.get("artist") or "Unknown Artist")
         album = safe_name(tags.get("album") or source.parent.name or "Unknown Album")

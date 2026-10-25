@@ -12,6 +12,8 @@ A simple tool that converts media into Wii-compatible formats for smooth playbac
 
 * Colorama is now used for purple text.
 * Safer organizer, preview, resume, and verified conversions.
+* Original deletion can be retried without converting completed files again.
+* Warnings and a deletion safeguard for subtitle formatting and embedded attachments.
 
 ## Features
 
