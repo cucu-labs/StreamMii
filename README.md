@@ -1,3 +1,5 @@
+## Check out [@motan1337](https://github.com/motan1337)'s alternative version of this project: [StreamMii-Monolithic](https://github.com/motan1337/StreamMii-Monolithic).
+
 # StreamMii 0.0.5
 
 A simple tool that converts media into Wii-compatible formats for smooth playback.
