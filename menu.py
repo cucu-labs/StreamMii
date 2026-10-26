@@ -308,8 +308,8 @@ def batch_menu(preferences, mode):
         print(f"From: {preferences.source}\nTo:   {preferences.library}")
         if args.title:
             print(f"Title: {args.title}")
-        print("1 > Convert and organize\n2 > Preview (no media changes)\n3 > Organize without converting\n4 > Correct title / year / season\n0 > Back")
-        choice = choose("> ", tuple("01234"))
+        print("1 > Convert and organize\n2 > Preview conversion (no media changes)\n3 > Organize without converting\n4 > Correct title / year / season\n5 > Preview organization only (no media changes)\n0 > Back")
+        choice = choose("> ", tuple("012345"))
         if choice == "0":
             return
         if choice == "4":
@@ -324,15 +324,16 @@ def batch_menu(preferences, mode):
             except ValueError as error:
                 print(f"Could not use those values: {error}")
             continue
-        args.dry_run = choice == "2"
-        args.organize_only = choice == "3"
+        args.dry_run = choice in ("2", "5")
+        args.organize_only = choice in ("3", "5")
         print("\nScanning your media...")
         try:
             run_batch(args)
         except (OSError, ValueError, RuntimeError, sqlite3.Error) as error:
             print(f"Could not complete this batch: {error}")
         if args.dry_run:
-            print("\nPreview finished. Choose 1 to convert, or 0 to go back.")
+            action = "3 to organize without converting" if args.organize_only else "1 to convert"
+            print(f"\nPreview finished. Choose {action}, or 0 to go back.")
         else:
             input("\nPress Enter to return to the main menu.")
             return

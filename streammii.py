@@ -46,7 +46,7 @@ def parser():
     run.add_argument("--dry-run", action="store_true", help="Show destinations without writing anything")
     run.add_argument("--organize-only", action="store_true", help="Copy files into the library without re-encoding")
     run.add_argument("--delete-originals", action="store_true", help="Delete each unchanged media source only after verified publication and durable journal commit; subtitles are kept")
-    run.add_argument("--allow-lossy-deletion", action="store_true", help="With --delete-originals, accept losing embedded subtitle formatting, unsupported subtitles, or attachments")
+    run.add_argument("--allow-lossy-deletion", action="store_true", help="With --delete-originals, accept loss of subtitle formatting, unsupported subtitles, attachments, cover artwork, or extra audio tracks")
     run.add_argument("--force", action="store_true", help="Process again, creating a new numbered copy")
     run.add_argument("--no-recursive", action="store_true")
     run.add_argument("--state-dir", type=Path, help="Journal/log directory (default OUTPUT/.streammii)")

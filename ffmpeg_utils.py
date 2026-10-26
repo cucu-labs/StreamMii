@@ -8,6 +8,7 @@ import queue
 import re
 import shutil
 import subprocess
+import tempfile
 import threading
 import time
 
@@ -25,6 +26,96 @@ def number(value, default=0.0):
         return result if math.isfinite(result) else default
     except (ValueError, ZeroDivisionError):
         return default
+
+
+def timestamp(value):
+    """Read FFmpeg's HH:MM:SS duration tags without treating them as ratios."""
+    if isinstance(value, str) and re.fullmatch(r"\d+:\d{2}:\d{2}(?:\.\d+)?", value.strip()):
+        hours, minutes, seconds = value.strip().split(":")
+        if int(minutes) < 60 and float(seconds) < 60:
+            return int(hours) * 3600 + int(minutes) * 60 + float(seconds)
+        return None
+    return number(value, None)
+
+
+def stream_interval(stream, format_info):
+    """Return this stream's presentation start/end, never a subtitle's duration."""
+    if "_packet_interval" in stream:
+        return stream["_packet_interval"]
+    start = number(stream.get("start_time"), None)
+    if start is None:
+        start_pts = number(stream.get("start_pts"), None)
+        time_base = number(stream.get("time_base"))
+        start = start_pts * time_base if start_pts is not None and time_base > 0 else number(format_info.get("start_time"))
+
+    # Matroska writers disagree about DURATION: FFmpeg writes an end
+    # timestamp, while other writers can store an elapsed length. With a
+    # nonzero start, only trust an identifiable FFmpeg tag without foreign
+    # track statistics. Ambiguous tags fall back to measuring actual packets.
+    if set(format_info.get("format_name", "").split(",")) & {"matroska", "webm"}:
+        tags = {key.upper(): value for key, value in stream.get("tags", {}).items()}
+        format_tags = {key.upper(): value for key, value in format_info.get("tags", {}).items()}
+        ffmpeg_writer = str(format_tags.get("ENCODER", "")).casefold().startswith("lavf")
+        foreign_statistics = any(key.startswith("_STATISTICS_") for key in tags)
+        end = timestamp(tags.get("DURATION"))
+        if end is not None and end > start and (start == 0 or (ffmpeg_writer and not foreign_statistics)):
+            return start, end
+    duration = number(stream.get("duration"))
+    if duration <= 0:
+        duration = number(stream.get("duration_ts")) * number(stream.get("time_base"))
+    if duration > 0:
+        return start, start + duration
+    return None
+
+
+def media_streams(info, audio=False):
+    """Streams selected by the conversion commands, in output order."""
+    if audio:
+        return info.audio[:1]
+    return ([info.video] if info.video is not None else []) + info.audio
+
+
+def read_packet_intervals(path, info, ffprobe):
+    """Fill missing A/V timing from packets, with bounded memory and runtime.
+
+    Some containers have neither stream durations nor Matroska DURATION tags.
+    Their overall duration is ambiguous when another track ends later. Probe
+    packets only in that case rather than assuming every track is full length.
+    """
+    missing = {s["index"]: s for s in media_streams(info) if stream_interval(s, info.format) is None}
+    if not missing:
+        return
+    command = [ffprobe, "-v", "error", "-show_packets", "-show_entries",
+               "packet=stream_index,pts_time,dts_time,duration_time", "-of", "compact=p=0:nk=0", str(path)]
+    bounds = {}
+    try:
+        # Long inputs can have millions of packets. Do not capture their
+        # complete listing in RAM; the temporary file is removed on exit.
+        with tempfile.TemporaryFile(mode="w+t", encoding="utf-8", errors="replace") as packets:
+            result = subprocess.run(command, stdout=packets, stderr=subprocess.PIPE, text=True,
+                                    encoding="utf-8", errors="replace", timeout=30, check=False)
+            if result.returncode:
+                raise ConversionError(f"Cannot measure media tracks: {Path(path).name}: {result.stderr[-1500:].strip()}")
+            packets.seek(0)
+            for line in packets:
+                fields = dict(part.split("=", 1) for part in line.strip().split("|") if "=" in part)
+                index = number(fields.get("stream_index"), None)
+                if index not in missing:
+                    continue
+                start = number(fields.get("pts_time"), None)
+                if start is None:
+                    start = number(fields.get("dts_time"), None)
+                if start is None:
+                    continue
+                duration = max(0, number(fields.get("duration_time")))
+                end = start + duration
+                previous = bounds.get(index)
+                bounds[index] = (min(start, previous[0]), max(end, previous[1])) if previous else (start, end)
+    except (OSError, subprocess.TimeoutExpired) as error:
+        raise ConversionError(f"Cannot measure media tracks: {Path(path).name}: {error}") from error
+    for index, (start, end) in bounds.items():
+        if end > start:
+            missing[index]["_packet_interval"] = (start, end)
 
 
 @dataclass
@@ -46,6 +137,9 @@ class MediaInfo:
 
     @property
     def duration(self):
+        intervals = [stream_interval(s, self.format) for s in media_streams(self)]
+        if intervals and all(interval is not None for interval in intervals):
+            return max(end for _, end in intervals) - min(start for start, _ in intervals)
         duration = number(self.format.get("duration"))
         if duration <= 0:
             duration = max((number(s.get("duration")) for s in self.streams), default=0)
@@ -69,7 +163,9 @@ def probe(path, ffprobe="ffprobe"):
         streams = data.get("streams", [])
         if not streams:
             raise ConversionError(f"No media streams found: {path}")
-        return MediaInfo(streams, data.get("format", {}))
+        info = MediaInfo(streams, data.get("format", {}))
+        read_packet_intervals(path, info, ffprobe)
+        return info
     except (OSError, subprocess.TimeoutExpired, ValueError) as error:
         raise ConversionError(f"ffprobe failed for {Path(path).name}: {error}") from error
 
@@ -118,7 +214,10 @@ def video_filter(stream, settings):
     if stream.get("field_order") not in (None, "unknown", "progressive"):
         filters.append("bwdif=mode=send_frame:parity=auto:deint=interlaced")
     filters += [f"scale={sw}:{sh}:flags=lanczos", "setsar=1", f"pad={cw}:{ch}:(ow-iw)/2:(oh-ih)/2", "format=yuv420p"]
-    fps = number(stream.get("avg_frame_rate")) or number(stream.get("r_frame_rate"))
+    # VFR footage can average below the cap while containing faster sections.
+    # r_frame_rate describes their timestamp cadence; checking both prevents
+    # those sections from bypassing the cap, while preserving lower-rate CFR.
+    fps = max(number(stream.get("avg_frame_rate")), number(stream.get("r_frame_rate")))
     if fps > settings.max_fps + 0.001:
         filters.append(f"fps={settings.max_fps:g}")
     return ",".join(filters)
@@ -234,12 +333,8 @@ def verify_output(path, source_info, settings, audio=False, expected_subtitles=0
     if not path.is_file() or path.stat().st_size == 0:
         raise ConversionError("FFmpeg produced no output")
     info = probe(path, settings.ffprobe)
-    if info.duration <= 0:
-        raise ConversionError("Output has no measurable duration")
-    if source_info.duration > 0 and abs(info.duration - source_info.duration) > max(0.5, source_info.duration * 0.01):
-        raise ConversionError("Output duration differs from the source; original was kept")
     if audio:
-        if not info.audio or info.audio[0].get("codec_name") != "mp3":
+        if len(info.audio) != 1 or info.audio[0].get("codec_name") != "mp3":
             raise ConversionError("Expected MP3 audio")
     else:
         stream = info.video
@@ -252,13 +347,29 @@ def verify_output(path, source_info, settings, audio=False, expected_subtitles=0
             raise ConversionError("Output dimensions or pixel format are incorrect")
         if abs(number(stream.get("sample_aspect_ratio"), 1) - 1) > 0.001:
             raise ConversionError("Output pixels are not square")
-        fps = number(stream.get("avg_frame_rate")) or number(stream.get("r_frame_rate"))
+        fps = max(number(stream.get("avg_frame_rate")), number(stream.get("r_frame_rate")))
         if fps > settings.max_fps + 0.1:
             raise ConversionError("Output frame rate exceeds the configured cap")
         if len(info.audio) != len(source_info.audio) or any(s.get("codec_name") != "aac" or s.get("channels", 0) > 2 for s in info.audio):
             raise ConversionError("Output audio tracks are missing or incompatible")
         if len(info.subtitles) != expected_subtitles:
             raise ConversionError("Output subtitle tracks are missing")
+    original_streams, converted_streams = media_streams(source_info, audio), media_streams(info, audio)
+    if len(original_streams) != len(converted_streams) or not original_streams:
+        raise ConversionError("Output media tracks are missing")
+    original_intervals = [stream_interval(s, source_info.format) for s in original_streams]
+    converted_intervals = [stream_interval(s, info.format) for s in converted_streams]
+    if any(interval is None for interval in original_intervals + converted_intervals):
+        raise ConversionError("Media track duration is unknown; cannot verify a complete conversion")
+    original_start = min(start for start, _ in original_intervals)
+    converted_start = min(start for start, _ in converted_intervals)
+    for original, converted in zip(original_intervals, converted_intervals):
+        duration = original[1] - original[0]
+        tolerance = max(0.5, duration * 0.01)
+        if abs((converted[1] - converted[0]) - duration) > tolerance:
+            raise ConversionError("Output media track duration differs from the source; original was kept")
+        if abs((converted[0] - converted_start) - (original[0] - original_start)) > tolerance:
+            raise ConversionError("Output media track timing differs from the source; original was kept")
     return info
 
 
@@ -272,6 +383,10 @@ def preservation_warnings(info, settings, audio=False):
     warnings = []
     if any(s.get("codec_type") == "attachment" for s in info.streams):
         warnings.append("Embedded attachments are omitted from the converted copy")
+    if any(s.get("disposition", {}).get("attached_pic") for s in info.streams):
+        warnings.append("Embedded cover artwork is omitted from the converted copy")
+    if audio and len(info.audio) > 1:
+        warnings.append(f"Only the first audio track is retained in MP3; {len(info.audio) - 1} additional audio track(s) are omitted")
     if not audio and settings.subtitles == "keep":
         styled = sorted({s.get("codec_name") for s in info.subtitles
                          if s.get("codec_name") in TEXT_SUB_CODECS - {"subrip"}})

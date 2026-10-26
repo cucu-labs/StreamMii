@@ -14,7 +14,9 @@ except ImportError:
     guessit_parse = None
 
 RESERVED = re.compile(r"^(CON|PRN|AUX|NUL|COM[1-9¹²³]|LPT[1-9¹²³])(?:\.|$)", re.I)
-EPISODE = re.compile(r"(?i)(?<![a-z0-9])(?:s(?P<s>\d{1,2})[ ._-]*e(?P<e>\d{1,3})|(?P<xs>\d{1,2})x(?P<xe>\d{1,3})|(?:episode|ep)[ ._-]*(?P<ep>\d{1,3}))(?P<more>(?:[ ._]*e\d{1,3}|[ ._]*-[ ._]*(?:e)?\d{1,3})*)(?!\d)")
+# Episode numbers must end at a token boundary: "-720p" is a resolution,
+# not a range ending at episode 720. Adjacent E01E02 identifiers still match.
+EPISODE = re.compile(r"(?i)(?<![a-z0-9])(?:s(?P<s>\d{1,2})[ ._-]*e(?P<e>\d{1,3})|(?P<xs>\d{1,2})x(?P<xe>\d{1,3})|(?:episode|ep)[ ._-]*(?P<ep>\d{1,3}))(?P<more>(?:[ ._]*e\d{1,3}|[ ._]*-[ ._]*(?:e)?\d{1,3})*)(?![a-z0-9])")
 YEAR = re.compile(r"(?<!\d)((?:19|20)\d{2})(?!\d)")
 RELEASE = re.compile(r"(?i)\b(?:2160p|1080[pi]|720p|480p|360p|bluray|blu.ray|brrip|bdrip|webrip|web[ .-]?dl|hdtv|dvdrip|x26[45]|h[ .]?26[45]|hevc|av1|aac|dts|proper|repack)\b")
 
@@ -117,13 +119,19 @@ def parse_name(path, category="auto", title=None, year=None, season=None):
     if release:
         raw_title = raw_title[:release.start()]
     fallback_title = clean_title(raw_title)
-    if not match and not episodes and guessed.get("type") == "episode":
+    use_guessed = not match and not episodes
+    if use_guessed and guessed.get("type") == "episode":
         ep = guessed.get("episode")
         episodes = tuple(ep) if isinstance(ep, list) and all(isinstance(e, int) for e in ep) else ((ep,) if isinstance(ep, int) else ())
         gs = guessed.get("season")
         parsed_season = gs if isinstance(gs, int) else 1
-    if not match and guessed.get("title") and not episodes:
-        fallback_title = str(guessed["title"])
+    if use_guessed and isinstance(guessed.get("title"), str) and guessed["title"].strip():
+        fallback_title = guessed["title"]
+        # Keep GuessIt's title and year together. A number such as 2049 may be
+        # part of that title rather than the release year found by the fallback.
+        guessed_year = guessed.get("year")
+        parsed_year = (guessed_year if type(guessed_year) is int
+                       and 1900 <= guessed_year <= 2099 else None)
     if fallback_title == "Unknown" and episodes:
         fallback_title = clean_title(path.parent.name)
     return MediaName(safe_name(title or fallback_title), year if year is not None else parsed_year,
